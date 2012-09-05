@@ -25,16 +25,12 @@ def tagData(dFile, position, bit=None, seek=0):
     return tagdata
 
 
-# Clase que actua como un diccionario
 class Device(UserDict):
     """ Store Device"""
     def __init__(self, deviceData=None, address=None):
         UserDict.__init__(self)
         self["data"] = deviceData
-        #self["address"] = address
         self["address"] = "%s,%s" % address
-        #self["geocoding"] = None
-        # Fecha y hora (del sistema)
         self["datetime"] = datetime.datetime.now()
 
 
@@ -63,29 +59,25 @@ class ANTDevice(Device):
     def __parse(self, data):
         self.clear()
         try:
-            dataFile = StringIO.StringIO(data[1:-1]) # remove '<' y '>'
-            #
+            dataFile = StringIO.StringIO(data[1:-1]) 
+
             for tag, (position, bit, seek, parseFunc, convertFunc) in self.tagDataANT.items():
                 self[tag] = convertFunc and convertFunc(parseFunc(dataFile, position, bit, seek)) or parseFunc(dataFile, position, bit, seek)
 
-            # Creamos una key para la altura (estandar), ya que las tramas actuales no la incluyen:
             self['altura'] = None
-            # Creamos una key para el dato position:
+
             self['position'] = "(%(lat)s,%(lng)s)" % self
 
-            # Realizamos la Geocodificación. Tratar de no hacer esto
-            # es mejor que se realize por cada cliente con la API de GoogleMap
             self["geocoding"] = None 
             self["geocoding"] = json.loads(Location.geomapgoogle.regeocode('%s,%s' % (self["lat"], self["lng"])))[0]
 
-        except: print(sys.exc_info()) #sys.stderr.write('Error Inesperado:', sys.exc_info())
+        except: print(sys.exc_info()) 
         finally: dataFile.close()
 
 
     def __setitem__(self, key, item):
         if key == "data" and item:
             self.__parse(item)
-        # Llamamos a __setitem__ de nuestro ancestro
         Device.__setitem__(self, key, item) 
 
         
@@ -115,16 +107,9 @@ def typeDevice(data):
             >>> data='>REV041674684322+0481126-0757378200000012;ID=ANT001<'
             >>> devices.typeDevice(data)
             'ANT'
-            >>>
             >>> type(devices.typeDevice(''))
             <type 'NoneType'>
             >>>
-            >>> if devices.typeDevice('') is not None: print "Seguir con el programa..."
-            ... 
-            >>> if devices.typeDevice(data) is not None: print "Seguir con el programa..."
-            ... 
-            Seguir con el programa...
-            >>> 
     """
     # Dispositivos soportados:
     types = ('ANT', 'SKP', 'HUNT')
@@ -133,10 +118,9 @@ def typeDevice(data):
                             [d for d in types 
                             if dat.find(d) is not -1])
                         )
-    return typeDev(data) or None #raise
+    return typeDev(data) or None 
 
 
-#
 def getTypeClass(data, address=None, module=sys.modules[Device.__module__]):
     """
         Determina que clase debe manejar un determinado dispositivo y
@@ -176,14 +160,10 @@ def getTypeClass(data, address=None, module=sys.modules[Device.__module__]):
     """
     import re
 
-    #data = data.replace('\n','')
-    #data = data.strip('\n')
     data = re.sub(r"[\r\n]+", "", data)
 
-    # Determinamos la clase manejadora adecuado según el dispositivo
     dev = "%sDevice" % typeDevice(data)
 
-    #return dev
     def getClass(module, dev): 
         """ 
             Retorna una referencia a la clase manejadora. 

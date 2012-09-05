@@ -35,9 +35,9 @@ class DaemonUDP:
         self.host = host
         self.port = port
         self.buffering = buffering
-        self.server = None # Servidor UDP activo 
+        self.server = None 
         self.running = 1 
-        self.thread = None # Hilo actual de la instacia del objeto daemon
+        self.thread = None 
 
 
     def start(self):
@@ -45,9 +45,9 @@ class DaemonUDP:
             Prepara el servidor 
         """
 
-        if createLogFile(str(load('FILELOG', 'FILE'))): # Creamos el fichero de Log
+        if createLogFile(str(load('FILELOG', 'FILE'))): 
             try:
-                self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Creamos el Socket Server 
+                self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
                 self.server.bind((self.host, self.port))
                 print >> sys.stdout, ("Server run %s:%s" % (self.host, self.port))
             except socket.error, (value, message):
@@ -61,10 +61,9 @@ class DaemonUDP:
         """ 
             threading 
         """
-        # Bucle Principal
         while self.running:
             try:
-                data, address = self.server.recvfrom(self.buffering) # Esperamos por un cliente UDP
+                data, address = self.server.recvfrom(self.buffering) 
                 self.thread = threading.Thread(target=self.threads, args=(data, address, self.__class__.lock, ))
                 self.thread.start()
             except KeyboardInterrupt: 
@@ -72,12 +71,12 @@ class DaemonUDP:
                 try:
                     sys.stdout.write("Exit App... \n")
                     self.server.close()
-                    self.thread.join() # Esperamos hasta que se termine la ejecución del ultimo hilo
-                                       # activo, para terminar la ejecución del programa.
+                    self.thread.join() 
+                                       
                     raise SystemExit("Se terminaron de ejecutar todos los dispositivos activos en el servidor")
                 except AttributeError, NameError: pass
 
-                break # Salimos del bucle principal
+                break 
 
 
 
@@ -85,41 +84,24 @@ class DaemonUDP:
         """
             run thread
         """
-        #import Devices
-
-        print "Data: " + data, "Nombre Hilo: " + self.thread.getName(), "Lock: " + str(lock)
-        print "Hilo actual: ", threading.currentThread()
-        print "Hilos presentes:",  threading.enumerate()
+        rawData = Devices.devices.getTypeClass(data, address) 
         
-        # Parse Devices
-        rawData = Devices.devices.getTypeClass(data, address) # retorna la data analizada en un diccionario
-        
-        if not rawData.has_key('id'): # Si la trama no tiene ID 
-            print >> sys.stdout, rawData, '\n'
-            return # Termina de ejecutar el hilo
+        if not rawData.has_key('id'): 
+            print >> sys.stdout, rawData#, '\n'
+            return 
 
-        print rawData # Imprime la data procesada (Print de Prueba)
-
-        ### Eventos
         import Event.captureEvent
-        event = Event.captureEvent.parseEvent(rawData) # Si se gestiona retorna el nombre del 
-                                                       # evento gestionado. Si no retorna None.
-        print "Evento Gestionado:", event
-        # End Event
-
-        ### Escribe el la Tabla de Log
+        event = Event.captureEvent.parseEvent(rawData) 
+                                                       
         import Log.logDB as LogDB
         LogDB.insertLog(rawData)
-        # End Tabla de Log
 
-        #### Escribe en el Fichero de Log
         lock.acquire(True)
         self.__class__.endfile = logFile(str(load('FILELOG', 'FILE')),
                                          self.__class__.endfile,
                                          raw=rawData 
                                         )
         lock.release()
-        # End Fichero de Log
 
 
 

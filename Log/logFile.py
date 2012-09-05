@@ -41,7 +41,6 @@ def logFile(arch, endFile=0, **data):
        usage:
        logFile('/tmp/log', final_buffer, foo1='data', foo2='data', ...)
        logFile('/tmp/log', final_buffer, foo='data', {'foo1':'data', 'foo2':'data', ...})
-
     """
     import time
 

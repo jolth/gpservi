@@ -18,12 +18,11 @@ def connection(args=None):
         almacenada en el fichero de configuración "config.cfg" (en la sección [DATABASE]).
         así:
 
-        
         Usage:
         >>> from DB.pgSQL import connection
 
-        >>> connection("dbname='test010' user='postgres' host='localhost' password='qwerty'") # Con argumentos
-        >>> connection() # Sin argumento
+        >>> connection("dbname='test010' user='postgres' host='localhost' password='qwerty'") 
+        >>> connection() 
         <connection object at 0xb715a72c; dsn: 'dbname='test009' user='postgres' host='localhost' password=xxxxxxxx', closed: 0>
         >>> conn = connection()
         >>> cursor = conn.cursor()
@@ -45,7 +44,6 @@ def connection(args=None):
 
         args = " ".join(["%s=\'%s\'" % (k, v) for k, v in args.items()])
 
-    # Conexión a la base de datos: 
     try:
         conn = pgsql.connect(args)
     except pgsql.OperationalError, e:
@@ -54,7 +52,6 @@ def connection(args=None):
         print >> sys.stdout, 'Error: Revisar el archivo de error.log'
         sys.exit(1)
 
-    # Retornamos la conexión
     return conn
 
         
@@ -73,14 +70,6 @@ class PgSQL(object):
             <pgSQL.PgSQL object at 0xb740e5ec>
             >>> db.conn
             <connection object at 0xb718a72c; dsn: 'dbname='test009' user='postgres' host='localhost' password=xxxxxxxx', closed: 0>
-            >>> dir(db.conn)
-            ['DataError', 'DatabaseError', 'Error', 'IntegrityError', 'InterfaceError', 'InternalError', 'NotSupportedError', \
-            'OperationalError', 'ProgrammingError', 'Warning', '__class__', '__delattr__', '__doc__', '__format__', '__getattribute__', \
-            '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', \
-            '__subclasshook__', 'async', 'binary_types', 'close', 'closed', 'commit', 'cursor', 'dsn', 'encoding', 'fileno', 'get_backend_pid', \
-            'get_parameter_status', 'get_transaction_status', 'isexecuting', 'isolation_level', 'lobject', 'notices', 'notifies', 'poll', \
-            'protocol_version', 'reset', 'rollback', 'server_version', 'set_client_encoding', 'set_isolation_level', 'status', 'string_types']
-            >>>
             >>> db.cur
             <cursor object at 0x83916bc; closed: 0>
             >>> 
@@ -90,12 +79,10 @@ class PgSQL(object):
         if args is not None: self.conn = connection(args)  
         else: self.conn = connection()  
               
-        self.status = self.conn.status # Status
-        self.procpid = self.conn.get_backend_pid() # Get backend process id.
+        self.status = self.conn.status 
+        self.procpid = self.conn.get_backend_pid() 
 
-        self.cur = self.conn.cursor() # Return a new cursor.
-
-        print "procpid:", self.procpid # process id (Print de Prueba)
+        self.cur = self.conn.cursor() 
 
 
     def exe(self, query, data=None):
@@ -131,53 +118,35 @@ class PgSQL(object):
             >>> db.exe("INSERT INTO gps (name, type) VALUES (%s, %s)", ('GPS0004', 2))
             'INSERT 0 1'
             >>>
-
-            # Si no, existen datos en una consoulta se puede manajar así:
-            >>> db = pgSQL.PgSQL("dbname='test009' user='postgres' host='localhost' password='qwerty'")
-            >>> r = db.exe("SELECT * FROM gps WHERE id=10")
-            Actualizando y Cerranda la conexión
-            >>> if r is not None: print "Record: ", r
-            ... else: "No existen datos"
-            ... 
-            'No existen datos'
-            >>>
         """
         record = None
 
         if data is not None:
             try:
                 self.cur.execute(query, data)
-                return self.cur.statusmessage # Deberia retornar 1, si el insert se realizo 
+                return self.cur.statusmessage 
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print >> sys.stderr, traceback.format_exc(exc_type)
-                #return self.conn.status
-                return self.conn.get_transaction_status() # Deberia retornar 0, si el insert no se realizo 
+                return self.conn.get_transaction_status() 
             finally: 
-                print >> sys.stderr, "Actualizando y Cerranda la conexión"
-                # Realizamos los cambios en la DB
                 self.conn.commit()
-                # Cerramos la comunicación
+
                 self.cur.close()
                 self.conn.close()
                 
         else:
             try:
-                self.cur.execute(query) # Execute the Query
+                self.cur.execute(query) 
                 record = self.cur.fetchall() or record 
-                return record  # Retornamo una lista con los resultados 
-                               # de la consulta o None si no obtine nada
+                return record  
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                #print >> sys.stderr, traceback.format_exc(exc_type)
                 print >> sys.stderr, "".join(traceback.format_exception_only(exc_type, exc_value))
-                #return self.conn.status
                 return self.conn.get_transaction_status() # Deberia retornar -1, si sucede un Error. 
             finally:
-                print >> sys.stderr, "Actualizando y Cerranda la conexión"
-                # Realizamos los cambios en la DB
                 self.conn.commit()
-                # Cerramos la comunicación
+
                 self.cur.close()
                 self.conn.close()
 

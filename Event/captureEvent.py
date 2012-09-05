@@ -40,8 +40,6 @@ def insertEvent(evento):
             Llama la función PL/pgSQL. 
         """
         from DB.pgSQL import PgSQL
-            
-        print "\nINSERT:", evento.__name__ # print de prueba 
         
         ###### SQL:
         # Insert Positions:
@@ -52,24 +50,16 @@ def insertEvent(evento):
                           VALUES (%(gps_id)s, %(positions_id)s, %(codEvent)s, %(datetime)s);"""
 
         try:
-            print "Insert Positions_gps" # Print de prueba
             db = PgSQL()
-            db.cur.execute(queryPositions, data) # INSERT positions_gps
+            db.cur.execute(queryPositions, data) 
 
-            if evento.__name__ == "event5": return evento(data) # Terminamos la ejecucion Llamando a event5
+            if evento.__name__ == "event5": return evento(data) 
             try:
-                # Si no se realiza la inserción no retorna nada.
-                data['positions_id'], data['gps_id'] = eval(db.cur.fetchone()[0]) # No exite en gps retorna (None,). Si active=f retorna ('(,)',). 
-                                                                                  # Para lo cual sucede una excepción y se termina la ejecución. 
+                data['positions_id'], data['gps_id'] = eval(db.cur.fetchone()[0]) 
             except:
-                print "Se termina de Gestionar el Evento", evento.__name__
-                return # Se termina la ejecución. 
-                
-            print "RETURN:", data['positions_id'], data['gps_id'] # print de prueba 
+                return 
 
-            # Insert Eventos:
-            print "Insert Eventos" # Print de prueba
-            db.cur.execute(queryEventos, data) # INSERT eventos
+            db.cur.execute(queryEventos, data) 
 
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -80,13 +70,9 @@ def insertEvent(evento):
             print >> sys.stderr, '-'*60
             return
         finally:
-            print >> sys.stdout, "Actualizando y Cerranda la conexión"
-            # Realizamos los cambios en la DB
             db.conn.commit()
-            # Cerramos la comunicación
             db.cur.close()
             db.conn.close()
-
 
         return evento(data) 
 
@@ -96,9 +82,8 @@ def insertEvent(evento):
 def insertReport(): pass
 
         
-# Funciones Manejadoras de Eventos:
 @insertEvent
-def event1(data=None): return "Panic" # Retornamos una cadena con el tipo de Evento 
+def event1(data=None): return "Panic" 
 @insertEvent
 def event2(data=None): return "Speeding"
 @insertEvent
@@ -116,31 +101,17 @@ def event9(data=None): return "Bateri off"
 def parseEvent(data=None): 
     """
         Analiza y determina que hacer con cada uno de los eventos. 
-        
-        Llama a getTypeEvent
     """
-    # Si es llamable, se llama a la función manajadora. si no, se retorna None 
-    # y no se ejecuta ninguna secuancia para el dato ingresado.
-    #return callable(getTypeEvent(data)) and getTypeEvent(data)(data) # Retorna False 
-    return (callable(getTypeEvent(data)) or None) and getTypeEvent(data)(data) # Retorna None.
+    return (callable(getTypeEvent(data)) or None) and getTypeEvent(data)(data) 
 
 
 def getTypeEvent(data=None, module=sys.modules[parseEvent.__module__]):
     """ 
-        >>> import captureEvent
-        >>> import datetime
-        >>>data = {'codEvent': '05', 'weeks': '1693', 'dayWeek': '4', 'ageData': '2', \
-        'position': '(4.81534,-75.69489)', 'type': 'R', 'address': '127.0.0.1,50637', \ 
-        'geocoding': u'RUEDA MILLONARIA PEREIRA, Calle 18 # CARRERA 7, Pereira, Colombia', \
-        'data': '>REV051693476454+0481534-0756948900102632;ID=ANT051<', 'course': '026', \
-        'gpsSource': '3', 'time': '76454', 'lat': '4.81534', 'typeEvent': 'EV', 'lng': '-75.69489', \
-        'datetime': datetime.datetime(2012, 7, 20, 8, 50, 9, 154217), 'speed': 1.0, 'id': 'ANT051', 'altura': None}
         >>> captureEvent.getTypeEvent(data)
         <function event5 at 0xb7395844>
         >>> 
     """
     try:
-        # Nombre de la Función Manejadora:
         event = "event%s" % int(data['codEvent'])
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -149,9 +120,7 @@ def getTypeEvent(data=None, module=sys.modules[parseEvent.__module__]):
         traceback.print_exception(exc_type, exc_value, exc_traceback,
                                   limit=2, file=sys.stderr)
         print >> sys.stderr, '-'*60
-        return # None
-
-    # Retorna la función Manejadora:
+        return 
     return hasattr(module, event) and getattr(module, event) or None 
 
 

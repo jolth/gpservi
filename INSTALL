@@ -1,11 +1,9 @@
 
 Dependencias:
 
-
 Python >= 2.6 
-Psycopg2
 PostgreSQL >= 8.4.12
-
+Psycopg2
 
 
 **************** INSTALACION *****************

@@ -8,7 +8,6 @@
 import daemon
 from Load.loadconfig import load
 
-
 if __name__ == "__main__":
     server = daemon.DaemonUDP(
                 str(load('DAEMON', 'DAEMONHost')), 

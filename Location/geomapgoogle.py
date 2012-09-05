@@ -1,10 +1,5 @@
 """
 Geocoding API Google
-
- import geomapgoogle
- geomapgoogle.geocode('San Francisco')
- 
- geomapgoogle.regeocode(latlng='40.714224,-73.961452')
  
 """
 import urllib, json
