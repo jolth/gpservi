@@ -41,10 +41,12 @@ def logFile(arch, endFile=0, **data):
        usage:
        logFile('/tmp/log', final_buffer, foo1='data', foo2='data', ...)
        logFile('/tmp/log', final_buffer, foo='data', {'foo1':'data', 'foo2':'data', ...})
+
     """
     import time
+    import codecs
 
-    with open(arch, 'a+') as f:
+    with codecs.open(arch, 'a+', 'utf-8') as f:
         f.seek(endFile)
         print >> f, ("%(id)s" % data['raw']).ljust(8), \
         ("%(address)s" % data['raw']).ljust(26), \
